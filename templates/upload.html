@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Resume</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Google Sans', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+        .upload-area:hover {
+            background-color: #f1f1f1;
+        }
+        .upload-area p {
+            margin: 0;
+            font-size: 16px;
+            color: #777;
+        }
+        .upload-area.dragging {
+            background-color: #e1e1e1;
+        }
+        #fileName {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+        .upload-area input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Resume Parser Using LLM</h2>
+        <h1>Upload Resume</h1>
+        <form action="/api/upload_resume" method="post" enctype="multipart/form-data">
+            <div class="upload-area" id="uploadArea" aria-label="File Upload Area">
+                <input type="file" name="resume" accept=".pdf" id="fileInput" required>
+                <p id="uploadMessage">Drag & drop your resume here, or click to select a file</p>
+                <div id="fileName" aria-live="polite"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block mt-4" id="uploadButton">Upload</button>
+        </form>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('fileName');
+        const uploadMessage = document.getElementById('uploadMessage');
+        const uploadButton = document.getElementById('uploadButton');
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file && file.type === 'application/pdf') {
+                fileNameDisplay.textContent = `Selected file: ${file.name}`;
+                uploadMessage.textContent = "File selected. You can drag & drop another file to replace it.";
+                uploadButton.disabled = false;
+            } else {
+                fileNameDisplay.textContent = "Please select a valid PDF file.";
+                uploadButton.disabled = true;
+            }
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                fileInput.files = e.dataTransfer.files;
+                fileNameDisplay.textContent = `Selected file: ${file.name}`;
+                uploadMessage.textContent = "File selected. You can drag & drop another file to replace it.";
+                uploadButton.disabled = false;
+            } else {
+                fileNameDisplay.textContent = "Please select a valid PDF file.";
+                uploadButton.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

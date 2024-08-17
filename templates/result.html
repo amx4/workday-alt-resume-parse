@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parsed Resume</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Google Sans', sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 100%;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 1em;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+      }
+      h1, h2 {
+        text-align: center;
+        color: #333;
+      }
+      .first-column {
+        font-weight: bold;
+        background-color: #e9ecef;
+      }
+      .section-title {
+        margin-top: 1em;
+        font-weight: bold;
+        color: #007bff;
+      }
+      .textarea-custom {
+        height: 5em;
+      }
+      .popup {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .popup-content {
+        background-color: #fff;
+        padding: 1em;
+        border-radius: 5px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      .popup-content h2 {
+        margin: 0;
+      }
+      .popup-content button {
+        margin-top: 1em;
+        background-color: #007bff;
+      }
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+        .editable {
+          max-width: 100%;
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Parsed Resume</h1>
+        
+        <!-- Preview Section -->
+        <div class="preview">
+            <h2>Preview</h2>
+            <table class="table">
+                <tr>
+                    <td class="first-column">Full Name:</td>
+                    <td>{{ parsed_resume.full_name }}</td>
+                </tr>
+                <tr>
+                    <td class="first-column">Mobile:</td>
+                    <td>{{ parsed_resume.mobile }}</td>
+                </tr>
+                <tr>
+                    <td class="first-column">Email:</td>
+                    <td>{{ parsed_resume.email }}</td>
+                </tr>
+                <tr>
+                    <td class="first-column">LinkedIn:</td>
+                    <td>{{ parsed_resume.linkedin }}</td>
+                </tr>
+                <tr>
+                    <td class="first-column">Skills:</td>
+                    <td>{{ parsed_resume.skillset | join(', ') }}</td>
+                </tr>
+                <tr>
+                    <td class="first-column">Education:</td>
+                    <td>
+                        {% for edu in parsed_resume.education %}
+                        <p>{{ edu.institution }}, {{ edu.degree }} ({{ edu.passing_year }})</p>
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="first-column">Experience:</td>
+                    <td>
+                        {% for exp in parsed_resume.experience %}
+                        <div>
+                            <p><strong>Title:</strong> {{ exp.title }}</p>
+                            <p><strong>Company:</strong> {{ exp.company }}</p>
+                            <p><strong>From:</strong> {{ exp.duration_from }} <strong>To:</strong> {{ exp.duration_to }}</p>
+                            <p><strong>Projects:</strong></p>
+                            <ul>
+                                {% for proj in exp.projects %}
+                                <li>{{ proj.name }}: {{ proj.details }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endfor %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Editable Form Section -->
+        <form id="resume-form">
+            <h2 class="section-title">Edit Resume</h2>
+            <table class="table">
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td class="first-column">Full Name</td>
+                    <td><input type="text" name="full_name" class="form-control" value="{{ parsed_resume.full_name }}"></td>
+                </tr>
+                <tr>
+                    <td class="first-column">Mobile</td>
+                    <td><input type="text" name="mobile" class="form-control" value="{{ parsed_resume.mobile }}"></td>
+                </tr>
+                <tr>
+                    <td class="first-column">Email</td>
+                    <td><input type="email" name="email" class="form-control" value="{{ parsed_resume.email }}"></td>
+                </tr>
+                <tr>
+                    <td class="first-column">LinkedIn</td>
+                    <td><input type="text" name="linkedin" class="form-control" value="{{ parsed_resume.linkedin }}"></td>
+                </tr>
+                <tr>
+                    <td class="first-column">Skills</td>
+                    <td><textarea name="skillset" class="form-control textarea-custom">{{ parsed_resume.skillset | join(', ') }}</textarea></td>
+                </tr>
+                <tr>
+                    <td class="first-column">Education</td>
+                    <td>
+                        <table id="education-table" class="table">
+                            {% for edu in parsed_resume.education %}
+                            <tr>
+                                <td><input type="text" name="education_institution" class="form-control" value="{{ edu.institution }}"></td>
+                                <td><input type="text" name="education_degree" class="form-control" value="{{ edu.degree }}"></td>
+                                <td><input type="text" name="education_year" class="form-control" value="{{ edu.passing_year }}"></td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                        <button type="button" class="btn btn-success" onclick="addEducationRow()">Add Education</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="first-column">Experience</td>
+                    <td>
+                        <table id="experience-table" class="table">
+                            {% for exp in parsed_resume.experience %}
+                            <tr>
+                                <td><input type="text" name="experience_title" class="form-control" value="{{ exp.title }}"></td>
+                                <td><input type="text" name="experience_company" class="form-control" value="{{ exp.company }}"></td>
+                                <td><input type="date" name="experience_duration_from" class="form-control" value="{{ exp.duration_from }}"></td>
+                                <td><input type="date" name="experience_duration_to" class="form-control" value="{{ exp.duration_to }}"></td>
+                                <td>
+                                    <table class="table">
+                                        {% for proj in exp.projects %}
+                                        <tr>
+                                            <td><input type="text" name="project_name" class="form-control" value="{{ proj.name }}"></td>
+                                            <td><input type="text" name="project_details" class="form-control" value="{{ proj.details }}"></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </table>
+                                    <button type="button" class="btn btn-success" onclick="addProjectRow(this)">Add Project</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                        <button type="button" class="btn btn-success" onclick="addExperienceRow()">Add Experience</button>
+                    </td>
+                </tr>
+            </table>
+        
+            <div class="text-right mt-3">
+                <button type="button" class="btn btn-primary" onclick="submitForm()">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="confirmCancel()">Cancel</button>
+            </div>
+            
+        </form>
+    </div>
+
+    <!-- Popup for Save Confirmation -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <h2>Success</h2>
+            <p>Your resume has been saved successfully.</p>
+            <button class="btn btn-primary" onclick="closePopup()">OK</button>
+        </div>
+    </div>
+    <script>
+        function confirmCancel() {
+    if (confirm("Are you sure you want to cancel? Any unsaved changes will be lost!")) {
+        window.location.href = '/';
+    }
+}
+    </script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+            function submitForm() {
+        const form = document.getElementById('resume-form');
+        const formData = new FormData(form);
+
+        fetch('/api/save_resume', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('popup').style.display = 'flex';
+            } else {
+                alert('Error saving resume.');
+            }
+        })
+        .catch(error => {
+            alert('Error saving resume.');
+        });
+    }
+
+    function closePopup() {
+        document.getElementById('popup').style.display = 'none';
+    }
+
+    function confirmCancel() {
+        document.getElementById('cancel-popup').style.display = 'flex';
+    }
+
+    function closeCancelPopup() {
+        document.getElementById('cancel-popup').style.display = 'none';
+    }
+
+    function proceedToCancel() {
+        window.location.href = '/';
+    }
+    function confirmCancel() {
+    if (confirm("Are you sure you want to cancel? Any unsaved changes will be lost.")) {
+        window.location.href = '/';
+    }
+}
+
+
+        function addEducationRow() {
+            const table = document.getElementById('education-table');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" name="education_institution" class="form-control"></td>
+                <td><input type="text" name="education_degree" class="form-control"></td>
+                <td><input type="text" name="education_year" class="form-control"></td>
+            `;
+        }
+
+        function addExperienceRow() {
+            const table = document.getElementById('experience-table');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" name="experience_title" class="form-control"></td>
+                <td><input type="text" name="experience_company" class="form-control"></td>
+                <td><input type="date" name="experience_duration_from" class="form-control"></td>
+                <td><input type="date" name="experience_duration_to" class="form-control"></td>
+                <td>
+                    <table class="table">
+                        <tr>
+                            <td><input type="text" name="project_name" class="form-control"></td>
+                            <td><input type="text" name="project_details" class="form-control"></td>
+                        </tr>
+                    </table>
+                    <button type="button" class="btn btn-success" onclick="addProjectRow(this)">Add Project</button>
+                </td>
+            `;
+        }
+
+        function addProjectRow(button) {
+            const row = button.closest('tr').querySelector('table').insertRow();
+            row.innerHTML = `
+                <td><input type="text" name="project_name" class="form-control"></td>
+                <td><input type="text" name="project_details" class="form-control"></td>
+            `;
+        }
+    </script>
+</body>
+</html>
